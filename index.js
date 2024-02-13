@@ -1,4 +1,4 @@
-class node {
+class Node {
   constructor(coordinates) {
     this.coordinates = coordinates;
     this.firstCase = [this.coordinates[0] + 2, this.coordinates[1] + 1];
@@ -11,26 +11,66 @@ class node {
     this.eightCase = [this.coordinates[0] - 1, this.coordinates[1] - 2];
   }
 }
+
 class Tree {
   constructor(root) {
     this.root = root;
   }
-  isValid(arr) {
-    return arr.every((coord) => coord >= 0 && coord < 8);
+
+  isValid(coord) {
+    return coord >= 0 && coord < 8;
   }
-  cleanNode(node = this.root) {
+
+  cleanNode(node) {
     for (const key in node) {
       if (key.endsWith("Case")) {
-        if (!this.isValid(node[key])) {
+        const coord = node[key];
+        if (!coord || !this.isValid(coord[0]) || !this.isValid(coord[1])) {
           node[key] = null;
         }
       }
     }
   }
-  buildTree() {}
+
+  buildTree(finalCoords) {
+    if (!this.root) return [];
+
+    const queue = [{ node: this.root, path: [this.root.coordinates] }];
+
+    while (queue.length > 0) {
+      const { node, path } = queue.shift();
+
+      this.cleanNode(node);
+
+      for (const key in node) {
+        if (key.endsWith("Case")) {
+          const coord = node[key];
+          if (
+            coord &&
+            coord[0] === finalCoords[0] &&
+            coord[1] === finalCoords[1]
+          ) {
+            return [...path, coord];
+          }
+        }
+      }
+
+      for (const key in node) {
+        if (key.endsWith("Case") && node[key]) {
+          const childNode = new Node(node[key]);
+          const childPath = [...path, node[key]];
+          queue.push({ node: childNode, path: childPath });
+        }
+      }
+    }
+
+    return [];
+  }
 }
-const knight = new node([0, 1]);
-const newTree = new Tree(knight);
-console.log(newTree);
-newTree.cleanNode();
-console.log(newTree);
+
+const initialCoords = [0, 0];
+const finalCoords = [7, 7];
+const rootNode = new Node(initialCoords);
+const tree = new Tree(rootNode);
+const result = tree.buildTree(finalCoords);
+console.log(result);
